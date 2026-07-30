@@ -36,6 +36,7 @@ func main() {
 	productHandler := handler.NewProductHandler(productService)
 
 	r := gin.Default()
+	r.Static("/images", "../../assets/images")
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(
 			http.StatusOK,
