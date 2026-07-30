@@ -13,6 +13,9 @@ import (
 //go:embed queries/get_products.sql
 var baseProductSql string
 
+//go:embed queries/get_product_by_id.sql
+var getProductByIdQuery string
+
 type PostgresProductRepository struct {
 	db *sql.DB
 }
@@ -127,4 +130,57 @@ func (r *PostgresProductRepository) GetAll(ctx context.Context, query domain.Pro
 
 	return products, nil
 
+}
+
+func (r *PostgresProductRepository) GetById(ctx context.Context, query domain.ProductQuery, id uint) (domain.Product, error) {
+
+	var p domain.Product
+	var categorySlug sql.NullString
+
+	row := r.db.QueryRowContext(ctx, getProductByIdQuery, id)
+
+	err := row.Scan(
+		&p.ID,
+		&p.CategoryID,
+		&p.TitleEn,
+		&p.TitleFa,
+		&p.DescriptionEn,
+		&p.DescriptionFa,
+		&p.PriceToman,
+		&p.PriceUSD,
+		pq.Array(&p.Images),
+		&p.CreatedAt,
+		&categorySlug,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return domain.Product{}, fmt.Errorf("product not found")
+		}
+		return domain.Product{}, fmt.Errorf("error scanning product by id: %w", err)
+	}
+
+	variantSQL := `SELECT id, product_id, color_en, color_fa, size, stock FROM product_variants WHERE product_id = $1`
+	variantRows, err := r.db.QueryContext(ctx, variantSQL, p.ID)
+
+	if err != nil {
+		return domain.Product{}, fmt.Errorf("error querying variants for product: %w", err)
+	}
+
+	defer variantRows.Close()
+
+	var variants []domain.ProductVariant
+	for variantRows.Next() {
+
+		var v domain.ProductVariant
+		err := variantRows.Scan(&v.ID, &v.ProductID, &v.ColorEn, &v.ColorFa, &v.Size, &v.Stock)
+		if err != nil {
+			return domain.Product{}, fmt.Errorf("error scanning variant: %w", err)
+		}
+		variants = append(variants, v)
+
+	}
+	p.Variants = variants
+
+	return p, nil
 }

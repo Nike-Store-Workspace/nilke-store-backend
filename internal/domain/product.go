@@ -55,4 +55,5 @@ type ProductVariantResponse struct {
 
 type ProductRepository interface {
 	GetAll(ctx context.Context, query ProductQuery) ([]Product, error)
+	GetById(ctx context.Context, query ProductQuery, id uint) (Product, error)
 }

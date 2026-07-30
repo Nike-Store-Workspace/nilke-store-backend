@@ -33,7 +33,9 @@ func main() {
 	signupHandler := handler.NewSignupHandler(signupService)
 
 	productService := services.NewProductService(productRepo)
-	productHandler := handler.NewProductHandler(productService)
+	productHandler := handler.NewGetAllProductHandler(productService)
+
+	getProductByIDHandler := handler.NewGetProductByIDHandler(productService)
 
 	r := gin.Default()
 	r.Static("/images", "../../assets/images")
@@ -52,6 +54,7 @@ func main() {
 		v1.POST("/login", authHandler.Login)
 		v1.POST("/signup", signupHandler.Signup)
 		v1.GET("/products", productHandler.GetProducts)
+		v1.GET("/product/:id", getProductByIDHandler.GetProduct) // برای گرفتن محصول تکی با Path
 	}
 	r.Run(":8090")
 }

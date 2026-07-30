@@ -54,3 +54,33 @@ func (s *ProductService) GetProducts(ctx context.Context, query domain.ProductQu
 
 	return response, nil
 }
+
+func (s *ProductService) GetById(ctx context.Context, query domain.ProductQuery, id uint) (*domain.ProductResponse, error) {
+	product, err := s.productRepository.GetById(ctx, query, id)
+	if err != nil {
+		return nil, err
+	}
+
+	var title string
+	var desc string
+
+	if query.Lang == "fa" {
+		title = product.TitleFa
+		desc = product.DescriptionFa
+	} else {
+		title = product.TitleEn
+		desc = product.DescriptionEn
+	}
+
+	response := domain.ProductResponse{
+		ID:          product.ID,
+		Category:    product.CategorySlug,
+		Title:       title,
+		Description: desc,
+		PriceUSD:    product.PriceUSD,
+		PriceToman:  product.PriceToman,
+		Images:      product.Images,
+	}
+	return &response, nil
+
+}
