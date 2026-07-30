@@ -24,11 +24,16 @@ func main() {
 
 	// Manual Di
 	userRepo := repository.NewPostgresUserRepository(db)
+	productRepo := repository.NewPostgresProductRepository(db)
+
 	authService := services.NewAuthService(userRepo, jwtSecret)
 	authHandler := handler.NewAuthHandler(authService)
 
 	signupService := services.NewSignupService(userRepo, jwtSecret)
 	signupHandler := handler.NewSignupHandler(signupService)
+
+	productService := services.NewProductService(productRepo)
+	productHandler := handler.NewProductHandler(productService)
 
 	r := gin.Default()
 	r.GET("/", func(c *gin.Context) {
@@ -45,6 +50,7 @@ func main() {
 		v1.GET("/ping", handler.Ping)
 		v1.POST("/login", authHandler.Login)
 		v1.POST("/signup", signupHandler.Signup)
+		v1.GET("/products", productHandler.GetProducts)
 	}
 	r.Run(":8090")
 }
