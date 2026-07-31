@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"nike_store_api/internal/data/repository"
 	"nike_store_api/internal/handler"
+	"nike_store_api/internal/handler/middleware"
 	"nike_store_api/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -37,6 +38,10 @@ func main() {
 
 	getProductByIDHandler := handler.NewGetProductByIDHandler(productService)
 
+	commentRepo := repository.NewPostgresCommentRepository(db)
+	commentService := services.NewCommentService(commentRepo)
+	getCommentHandler := handler.NewGetCommentHandler(*commentService)
+
 	r := gin.Default()
 	r.Static("/images", "../../assets/images")
 	r.GET("/", func(c *gin.Context) {
@@ -55,6 +60,13 @@ func main() {
 		v1.POST("/signup", signupHandler.Signup)
 		v1.GET("/products", productHandler.GetProducts)
 		v1.GET("/product/:id", getProductByIDHandler.GetProduct) // برای گرفتن محصول تکی با Path
+		v1.GET("/comments/:id", getCommentHandler.GetProductComments)
+
+		protected := v1.Group("")
+		protected.Use(middleware.AuthMiddleware(jwtSecret))
+		{
+			protected.POST("/comments", getCommentHandler.AddComment)
+		}
 	}
 	r.Run(":8090")
 }
