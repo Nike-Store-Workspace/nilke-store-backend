@@ -10,4 +10,5 @@ main
 # IDE / OS files
 .idea/
 .vscode/
+.assets/images - Copy/
 .DS_Store
