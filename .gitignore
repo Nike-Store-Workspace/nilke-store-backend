@@ -1,0 +1,13 @@
+# Executables
+*.exe
+*.exe.bin
+*.exe
+main
+
+# Environment variables
+.env
+
+# IDE / OS files
+.idea/
+.vscode/
+.DS_Store
