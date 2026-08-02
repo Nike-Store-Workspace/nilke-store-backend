@@ -12,3 +12,12 @@ main
 .vscode/
 .assets/images - Copy/
 .DS_Store
+
+# Debug binaries created by Delve/VS Code
+__debug_bin*
+*.exe
+*.exe.bin
+
+# Go binaries
+main
+*.out

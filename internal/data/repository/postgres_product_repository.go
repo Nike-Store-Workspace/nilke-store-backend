@@ -71,6 +71,9 @@ func (r *PostgresProductRepository) GetAll(ctx context.Context, query domain.Pro
 			&p.DescriptionFa,
 			&p.PriceToman, // <--- اول تومان (مطابق فایل SQL)
 			&p.PriceUSD,   // <--- بعد دلار (مطابق فایل SQL)
+			&p.PreviousPriceToman,
+			&p.PreviousPriceUSD,
+			&p.DiscountPercentage,
 			pq.Array(&p.Images),
 			&p.CreatedAt,
 			&categorySlug,
@@ -148,6 +151,9 @@ func (r *PostgresProductRepository) GetById(ctx context.Context, query domain.Pr
 		&p.DescriptionFa,
 		&p.PriceToman,
 		&p.PriceUSD,
+		&p.PreviousPriceToman,
+		&p.PreviousPriceUSD,
+		&p.DiscountPercentage,
 		pq.Array(&p.Images),
 		&p.CreatedAt,
 		&categorySlug,

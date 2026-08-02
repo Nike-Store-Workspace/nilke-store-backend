@@ -7,6 +7,9 @@ SELECT
     p.description_fa,
     p.price_toman,
     p.price_usd,
+    p.previous_price_toman,
+    p.previous_price_usd,
+    p.discount_percentage,
     p.images,
     p.created_at,
     c.slug

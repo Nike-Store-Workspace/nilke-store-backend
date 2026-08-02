@@ -15,7 +15,6 @@ func NewProductService(productRepository domain.ProductRepository) *ProductServi
 
 func (s *ProductService) GetProducts(ctx context.Context, query domain.ProductQuery) ([]domain.ProductResponse, error) {
 	products, err := s.productRepository.GetAll(ctx, query)
-
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +25,6 @@ func (s *ProductService) GetProducts(ctx context.Context, query domain.ProductQu
 	var response []domain.ProductResponse
 
 	for _, product := range products {
-
 		var title string
 		var desc string
 
@@ -38,18 +36,35 @@ func (s *ProductService) GetProducts(ctx context.Context, query domain.ProductQu
 			desc = product.DescriptionEn
 		}
 
+		var variantResponses []domain.ProductVariantResponse
+		for _, v := range product.Variants {
+			color := v.ColorEn
+			if query.Lang == "fa" {
+				color = v.ColorFa
+			}
+			variantResponses = append(variantResponses, domain.ProductVariantResponse{
+				ID:    v.ID,
+				Color: color,
+				Size:  v.Size,
+				Stock: v.Stock,
+			})
+		}
+
 		mappedProduct := domain.ProductResponse{
-			ID:          product.ID,
-			Category:    product.CategorySlug,
-			Title:       title,
-			Description: desc,
-			PriceUSD:    product.PriceUSD,
-			PriceToman:  product.PriceToman,
-			Images:      product.Images,
+			ID:                 product.ID,
+			Category:           product.CategorySlug,
+			Title:              title,
+			Description:        desc,
+			PriceUSD:           product.PriceUSD,
+			PriceToman:         product.PriceToman,
+			PreviousPriceUSD:   product.PreviousPriceUSD,
+			PreviousPriceToman: product.PreviousPriceToman,
+			DiscountPercentage: product.DiscountPercentage,
+			Images:             product.Images,
+			Variants:           variantResponses,
 		}
 
 		response = append(response, mappedProduct)
-
 	}
 
 	return response, nil
@@ -73,13 +88,16 @@ func (s *ProductService) GetById(ctx context.Context, query domain.ProductQuery,
 	}
 
 	response := domain.ProductResponse{
-		ID:          product.ID,
-		Category:    product.CategorySlug,
-		Title:       title,
-		Description: desc,
-		PriceUSD:    product.PriceUSD,
-		PriceToman:  product.PriceToman,
-		Images:      product.Images,
+		ID:                 product.ID,
+		Category:           product.CategorySlug,
+		Title:              title,
+		Description:        desc,
+		PriceUSD:           product.PriceUSD,
+		PriceToman:         product.PriceToman,
+		PreviousPriceUSD:   product.PreviousPriceUSD,
+		PreviousPriceToman: product.PreviousPriceToman,
+		DiscountPercentage: product.DiscountPercentage,
+		Images:             product.Images,
 	}
 	return &response, nil
 
