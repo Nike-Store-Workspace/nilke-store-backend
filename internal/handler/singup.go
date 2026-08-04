@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"nike_store_api/internal/domain"
 	"nike_store_api/internal/services"
@@ -21,7 +22,10 @@ func (h *SignupHandler) Signup(c *gin.Context) {
 	var request domain.SignupRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse(
+			"StatusBadRequest",
+			fmt.Sprintf("Invalid request body.\n details: %s", err.Error()),
+		))
 		return
 	}
 

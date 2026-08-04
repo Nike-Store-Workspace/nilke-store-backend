@@ -87,6 +87,20 @@ func (s *ProductService) GetById(ctx context.Context, query domain.ProductQuery,
 		desc = product.DescriptionEn
 	}
 
+	var variantResponses []domain.ProductVariantResponse
+	for _, v := range product.Variants {
+		color := v.ColorEn
+		if query.Lang == "fa" {
+			color = v.ColorFa
+		}
+		variantResponses = append(variantResponses, domain.ProductVariantResponse{
+			ID:    v.ID,
+			Color: color,
+			Size:  v.Size,
+			Stock: v.Stock,
+		})
+	}
+
 	response := domain.ProductResponse{
 		ID:                 product.ID,
 		Category:           product.CategorySlug,
@@ -98,6 +112,7 @@ func (s *ProductService) GetById(ctx context.Context, query domain.ProductQuery,
 		PreviousPriceToman: product.PreviousPriceToman,
 		DiscountPercentage: product.DiscountPercentage,
 		Images:             product.Images,
+		Variants:           variantResponses,
 	}
 	return &response, nil
 

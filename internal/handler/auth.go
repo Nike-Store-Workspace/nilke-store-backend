@@ -37,5 +37,5 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 
 	}
-	c.JSON(http.StatusOK, resp)
+	c.JSON(http.StatusOK, domain.SuccessResponse(resp, "You are login successfully."))
 }

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"nike_store_api/internal/domain"
 	"nike_store_api/internal/services"
@@ -21,9 +22,11 @@ func (h *GetCommentsHandler) GetProductComments(c *gin.Context) {
 	productId, err := strconv.Atoi(c.Param("id"))
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid product ID",
-		})
+
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse(
+			"StatusBadRequest",
+			fmt.Sprintf("Invalid product ID.\n details: %s", err.Error()),
+		))
 		return
 	}
 
@@ -40,21 +43,19 @@ func (h *GetCommentsHandler) GetProductComments(c *gin.Context) {
 
 	comments, err := h.service.GetByProductID(c.Request.Context(), query)
 	if err != nil {
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error": err.Error(),
-			})
+
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse(
+			"StatusInternalServerError",
+			fmt.Sprintf("details: %s", err.Error()),
+		))
 		return
 
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"page":  query.Page,
-		"limit": query.Limit,
-		"lang":  query.Lang,
-		"data":  comments,
-	})
+	c.JSON(http.StatusCreated, domain.SuccessResponse(&comments, "comment saved successfully"))
+
+	// c.JSON(http.StatusOK, gin.H{
+
 }
 
 func (h *GetCommentsHandler) AddComment(c *gin.Context) {
@@ -70,7 +71,10 @@ func (h *GetCommentsHandler) AddComment(c *gin.Context) {
 
 	var req domain.CreateCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Your requested data is invalid", "details": err.Error()})
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse(
+			"StatusBadRequest",
+			fmt.Sprintf("Your requested data is invalid.\n details: %s", err.Error()),
+		))
 		return
 	}
 
@@ -84,12 +88,12 @@ func (h *GetCommentsHandler) AddComment(c *gin.Context) {
 	}
 
 	if err := h.service.Create(c.Request.Context(), &comment); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse(
+			"StatusBadRequest",
+			fmt.Sprintf(" details: %s", err.Error()),
+		))
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "comment saved successfully",
-		"data":    comment,
-	})
+	c.JSON(http.StatusCreated, domain.SuccessResponse(&comment, "comment saved successfully"))
 }

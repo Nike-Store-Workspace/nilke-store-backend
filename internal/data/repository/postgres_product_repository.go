@@ -59,7 +59,6 @@ func (r *PostgresProductRepository) GetAll(ctx context.Context, query domain.Pro
 
 	for rows.Next() {
 		var p domain.Product
-		var categorySlug sql.NullString
 
 		// ...
 		err := rows.Scan(
@@ -76,7 +75,7 @@ func (r *PostgresProductRepository) GetAll(ctx context.Context, query domain.Pro
 			&p.DiscountPercentage,
 			pq.Array(&p.Images),
 			&p.CreatedAt,
-			&categorySlug,
+			&p.CategorySlug,
 		)
 		// ...
 
@@ -138,7 +137,6 @@ func (r *PostgresProductRepository) GetAll(ctx context.Context, query domain.Pro
 func (r *PostgresProductRepository) GetById(ctx context.Context, query domain.ProductQuery, id uint) (domain.Product, error) {
 
 	var p domain.Product
-	var categorySlug sql.NullString
 
 	row := r.db.QueryRowContext(ctx, getProductByIdQuery, id)
 
@@ -156,7 +154,7 @@ func (r *PostgresProductRepository) GetById(ctx context.Context, query domain.Pr
 		&p.DiscountPercentage,
 		pq.Array(&p.Images),
 		&p.CreatedAt,
-		&categorySlug,
+		&p.CategorySlug,
 	)
 
 	if err != nil {

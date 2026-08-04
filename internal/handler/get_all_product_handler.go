@@ -32,12 +32,11 @@ func (h *GetAllProductHandler) GetProducts(c *gin.Context) {
 	products, err := h.service.GetProducts(c.Request.Context(), query)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("An Internal server accorded in get products : %w", err.Error())})
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse("INTERNAL_ERROR", fmt.Sprintf("An Internal server error accorded in get products : %w", err.Error())))
+		return
 	}
 
 	c.JSON(
-		http.StatusOK, gin.H{
-			"data": products,
-		})
+		http.StatusOK, domain.SuccessResponse(&products, "Products retrieved successfully"))
 
 }
