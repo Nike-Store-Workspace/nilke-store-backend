@@ -39,7 +39,7 @@ func (h *GetProductByIDHandler) GetProduct(ctx *gin.Context) {
 	product, err := h.service.GetById(ctx.Request.Context(), query, productID)
 
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, domain.ErrorResponse("StatusNotFound", "Product does not exist. Please check the id and try again."))
+		ctx.JSON(http.StatusNotFound, domain.ErrorResponse("ERROR", err.Error()))
 		return
 	}
 	ctx.JSON(http.StatusOK, domain.SuccessResponse(product, "The product retrieved successfully."))

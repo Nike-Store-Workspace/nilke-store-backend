@@ -37,6 +37,7 @@ func main() {
 	productHandler := handler.NewGetAllProductHandler(productService)
 
 	getProductByIDHandler := handler.NewGetProductByIDHandler(productService)
+	searchProductsHandler := handler.NewSearchProductsHandler(productService)
 
 	commentRepo := repository.NewPostgresCommentRepository(db)
 	commentService := services.NewCommentService(commentRepo)
@@ -61,6 +62,7 @@ func main() {
 		v1.GET("/products", productHandler.GetProducts)
 		v1.GET("/product/:id", getProductByIDHandler.GetProduct) // برای گرفتن محصول تکی با Path
 		v1.GET("/comments/:id", getCommentHandler.GetProductComments)
+		v1.GET("/search-products", searchProductsHandler.Search)
 
 		protected := v1.Group("")
 		protected.Use(middleware.AuthMiddleware(jwtSecret))
