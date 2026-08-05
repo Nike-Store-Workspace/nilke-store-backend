@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"nike_store_api/internal/domain"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -22,9 +23,10 @@ func main() {
 
 	fmt.Println("Seeding started...")
 
-	seedCategories(db)
-	seedProducts(db)
-	seedVariants(db)
+	// seedCategories(db)
+	// seedProducts(db)
+	// seedVariants(db)
+	seedBanners(db)
 
 	fmt.Println("Seeding completed successfully! 100 Nike shoes added. 🚀")
 }
@@ -165,4 +167,100 @@ func seedVariants(db *sql.DB) {
 		}
 	}
 	fmt.Println("Variants seeded.")
+}
+
+func seedBanners(db *sql.DB) {
+	banners := []domain.Banner{
+		{
+			Name:  "banner-en-1",
+			Image: "/images/banners/en/banner-en-1.png",
+			Lang:  "en",
+		},
+		{
+			Name:  "banner-en-2",
+			Image: "/images/banners/en/banner-en-2.png",
+			Lang:  "en",
+		},
+		{
+			Name:  "banner-en-3",
+			Image: "/images/banners/en/banner-en-3.png",
+			Lang:  "en",
+		},
+		{
+			Name:  "banner-en-4",
+			Image: "/images/banners/en/banner-en-4.png",
+			Lang:  "en",
+		},
+		{
+			Name:  "banner-en-5",
+			Image: "/images/banners/en/banner-en-5.png",
+			Lang:  "en",
+		},
+
+		{
+			Name:  "banner-fa-1",
+			Image: "/images/banners/fa/banner-fa-1.png",
+			Lang:  "fa",
+		},
+		{
+			Name:  "banner-fa-2",
+			Image: "/images/banners/fa/banner-fa-2.png",
+			Lang:  "fa",
+		},
+		{
+			Name:  "banner-fa-3",
+			Image: "/images/banners/fa/banner-fa-3.png",
+			Lang:  "fa",
+		},
+		{
+			Name:  "banner-fa-4",
+			Image: "/images/banners/fa/banner-fa-4.png",
+			Lang:  "fa",
+		},
+		{
+			Name:  "banner-fa-5",
+			Image: "/images/banners/fa/banner-fa-5.png",
+			Lang:  "fa",
+		},
+		{
+			Name:  "banner-fa-6",
+			Image: "/images/banners/fa/banner-fa-6.png",
+			Lang:  "fa",
+		},
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		log.Fatal("failed to begin banners seed transaction:", err)
+	}
+
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+			log.Fatal("failed to seed banners:", err)
+		}
+	}()
+
+	_, err = tx.Exec(`DELETE FROM banners`)
+	if err != nil {
+		return
+	}
+
+	query := `
+		INSERT INTO banners (name, image, lang)
+		VALUES ($1, $2, $3)
+	`
+
+	for _, banner := range banners {
+		_, err = tx.Exec(query, banner.Name, banner.Image, banner.Lang)
+		if err != nil {
+			err = fmt.Errorf("failed to insert banner %s: %w", banner.Name, err)
+			return
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		log.Fatal("failed to commit banners seed transaction:", err)
+	}
 }

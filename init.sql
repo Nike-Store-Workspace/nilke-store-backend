@@ -33,3 +33,7 @@ CREATE TABLE IF NOT EXISTS product_comments (
 ALTER TABLE product_comments  ADD COLUMN title_fa VARCHAR(255) NOT NULL;
 ALTER TABLE product_comments  ADD COLUMN title_en VARCHAR(255) NOT NULL;
 ALTER TABLE product_comments  DROP COLUMN title;
+
+
+
+CREATE TABLE IF NOT EXISTS banners(id SERIAL PRIMARY KEY, name VARCHAR(255),image VARCHAR(255) NOT NULL,lang VARCHAR(2) NOT NULL);

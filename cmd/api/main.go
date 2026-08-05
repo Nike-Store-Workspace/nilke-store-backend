@@ -43,6 +43,10 @@ func main() {
 	commentService := services.NewCommentService(commentRepo)
 	getCommentHandler := handler.NewGetCommentHandler(*commentService)
 
+	bannersRepo := repository.NewBannerRepository(db)
+	bannersService := services.NewBannersService(bannersRepo)
+	getBannersHandler := handler.NewBannersHandler(bannersService)
+
 	r := gin.Default()
 	r.Static("/images", "../../assets/images")
 	r.GET("/", func(c *gin.Context) {
@@ -63,6 +67,7 @@ func main() {
 		v1.GET("/product/:id", getProductByIDHandler.GetProduct) // برای گرفتن محصول تکی با Path
 		v1.GET("/comments/:id", getCommentHandler.GetProductComments)
 		v1.GET("/search-products", searchProductsHandler.Search)
+		v1.GET("/banners", getBannersHandler.GetBanners)
 
 		protected := v1.Group("")
 		protected.Use(middleware.AuthMiddleware(jwtSecret))
