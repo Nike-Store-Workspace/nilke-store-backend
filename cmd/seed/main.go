@@ -6,9 +6,17 @@ import (
 	"log"
 	"math/rand"
 	"nike_store_api/internal/domain"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
+
+	"os"
 )
 
 func main() {
@@ -26,7 +34,8 @@ func main() {
 	// seedCategories(db)
 	// seedProducts(db)
 	// seedVariants(db)
-	seedBanners(db)
+	// seedBanners(db)
+	updateProductImagesFromDir(db)
 
 	fmt.Println("Seeding completed successfully! 100 Nike shoes added. 🚀")
 }
@@ -195,6 +204,22 @@ func seedBanners(db *sql.DB) {
 			Name:  "banner-en-5",
 			Image: "/images/banners/en/banner-en-5.png",
 			Lang:  "en",
+		}, {
+			Name:  "banner-en-6",
+			Image: "/images/banners/en/banner-en-6.png",
+			Lang:  "en",
+		}, {
+			Name:  "banner-en-7",
+			Image: "/images/banners/en/banner-en-7.png",
+			Lang:  "en",
+		}, {
+			Name:  "banner-en-8",
+			Image: "/images/banners/en/banner-en-8.png",
+			Lang:  "en",
+		}, {
+			Name:  "banner-en-9",
+			Image: "/images/banners/en/banner-en-9.png",
+			Lang:  "en",
 		},
 
 		{
@@ -225,6 +250,21 @@ func seedBanners(db *sql.DB) {
 		{
 			Name:  "banner-fa-6",
 			Image: "/images/banners/fa/banner-fa-6.png",
+			Lang:  "fa",
+		},
+		{
+			Name:  "banner-fa-7",
+			Image: "/images/banners/fa/banner-fa-7.png",
+			Lang:  "fa",
+		},
+		{
+			Name:  "banner-fa-8",
+			Image: "/images/banners/fa/banner-fa-8.png",
+			Lang:  "fa",
+		},
+		{
+			Name:  "banner-fa-9",
+			Image: "/images/banners/fa/banner-fa-9.png",
 			Lang:  "fa",
 		},
 	}
@@ -263,4 +303,111 @@ func seedBanners(db *sql.DB) {
 	if err != nil {
 		log.Fatal("failed to commit banners seed transaction:", err)
 	}
+}
+
+// FileInfo ساختاری برای نگهداری اسم فایل و عدد ترتیبی آن
+type FileInfo struct {
+	WebPath string
+	Number  int
+}
+
+func updateProductImagesFromDir(db *sql.DB) {
+	// تشخیص خودکار مسیر بر اساس جایی که ترمینال را اجرا کرده‌اید
+	localBaseDir := "assets/images"
+	if _, err := os.Stat(localBaseDir); os.IsNotExist(err) {
+		localBaseDir = "../../assets/images" // اگر ترمینال داخل پوشه cmd/seed باز شده باشد
+	}
+
+	// ۱. دریافت ID تمام محصولات از دیتابیس
+	rows, err := db.Query("SELECT id FROM products")
+	if err != nil {
+		log.Fatalf("Error fetching product IDs: %v", err)
+	}
+	defer rows.Close()
+
+	var productIDs []int
+	for rows.Next() {
+		var id int
+		if err := rows.Scan(&id); err == nil {
+			productIDs = append(productIDs, id)
+		}
+	}
+
+	// ۲. پیمایش برای هر محصول
+	for _, pID := range productIDs {
+		// مسیر پوشه فیزیکی محصول (مثلاً: assets/images/1)
+		productDirPath := filepath.Join(localBaseDir, strconv.Itoa(pID))
+
+		// خواندن محتویات پوشه محصول
+		files, err := os.ReadDir(productDirPath)
+		if err != nil {
+			// اگر پوشه‌ای برای این ID وجود نداشت عبور کن
+			continue
+		}
+
+		var imageFiles []FileInfo
+
+		// ۳. خواندن فایل‌ها و استخراج شماره عکس
+		for _, file := range files {
+			if file.IsDir() {
+				continue
+			}
+
+			filename := file.Name()
+			ext := filepath.Ext(filename)
+			if !isImageExtension(ext) {
+				continue
+			}
+
+			num := extractNumber(filename)
+
+			// مسیر وب که در دیتابیس ذخیره می‌شود: /images/1/1.png
+			webPath := fmt.Sprintf("/images/%d/%s", pID, filename)
+
+			imageFiles = append(imageFiles, FileInfo{
+				WebPath: webPath,
+				Number:  num,
+			})
+		}
+
+		if len(imageFiles) == 0 {
+			continue
+		}
+
+		// ۴. مرتب‌سازی عددی (1, 2, 3, 10...)
+		sort.Slice(imageFiles, func(i, j int) bool {
+			return imageFiles[i].Number < imageFiles[j].Number
+		})
+
+		// ۵. ساخت اسلایس نهایی مرتب‌شده
+		var sortedWebPaths []string
+		for _, img := range imageFiles {
+			sortedWebPaths = append(sortedWebPaths, img.WebPath)
+		}
+
+		// ۶. آپدیت ستون images در PostgreSQL
+		query := `UPDATE products SET images = $1 WHERE id = $2`
+		_, err = db.Exec(query, pq.Array(sortedWebPaths), pID)
+		if err != nil {
+			log.Printf("Error updating images for product %d: %v\n", pID, err)
+		} else {
+			fmt.Printf("Product %d updated: %v\n", pID, sortedWebPaths)
+		}
+	}
+}
+
+// توابع کمکی مورد نیاز
+func extractNumber(filename string) int {
+	re := regexp.MustCompile(`\d+`)
+	match := re.FindString(filename)
+	if match == "" {
+		return 999999
+	}
+	num, _ := strconv.Atoi(match)
+	return num
+}
+
+func isImageExtension(ext string) bool {
+	ext = strings.ToLower(ext)
+	return ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".webp"
 }
