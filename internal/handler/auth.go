@@ -39,3 +39,19 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, domain.SuccessResponse(resp, "You are login successfully."))
 }
+
+func (h *AuthHandler) RefreshToken(c *gin.Context) {
+	var request domain.RefreshTokenRequest
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	response, err := h.authService.RefreshToken(c.Request.Context(), request.RefreshToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, domain.SuccessResponse(response, "Token refreshed successfully."))
+}

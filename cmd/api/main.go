@@ -26,11 +26,12 @@ func main() {
 	// Manual Di
 	userRepo := repository.NewPostgresUserRepository(db)
 	productRepo := repository.NewPostgresProductRepository(db)
+	refreshTokenRepo := repository.NewPostgresRefreshTokenRepository(db)
 
-	authService := services.NewAuthService(userRepo, jwtSecret)
+	authService := services.NewAuthService(userRepo, refreshTokenRepo, jwtSecret)
 	authHandler := handler.NewAuthHandler(authService)
 
-	signupService := services.NewSignupService(userRepo, jwtSecret)
+	signupService := services.NewSignupService(userRepo, authService, jwtSecret)
 	signupHandler := handler.NewSignupHandler(signupService)
 
 	productService := services.NewProductService(productRepo)
@@ -63,8 +64,9 @@ func main() {
 		v1.GET("/ping", handler.Ping)
 		v1.POST("/login", authHandler.Login)
 		v1.POST("/signup", signupHandler.Signup)
+		v1.POST("/refresh-token", authHandler.RefreshToken)
 		v1.GET("/products", productHandler.GetProducts)
-		v1.GET("/product/:id", getProductByIDHandler.GetProduct) // برای گرفتن محصول تکی با Path
+		v1.GET("/product/:id", getProductByIDHandler.GetProduct)
 		v1.GET("/comments/:id", getCommentHandler.GetProductComments)
 		v1.GET("/search-products", searchProductsHandler.Search)
 		v1.GET("/banners", getBannersHandler.GetBanners)
@@ -73,6 +75,7 @@ func main() {
 		protected.Use(middleware.AuthMiddleware(jwtSecret))
 		{
 			protected.POST("/comments", getCommentHandler.AddComment)
+
 		}
 	}
 	r.Run(":8090")

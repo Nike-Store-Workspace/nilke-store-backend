@@ -16,8 +16,9 @@ type LoginRequest struct {
 }
 
 type AuthResponse struct {
-	Token string `json:"token"`
-	User  User   `json:"user"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
+	User         User   `json:"user"`
 }
 
 type SignupRequest struct {
@@ -29,4 +30,5 @@ type SignupRequest struct {
 type UserRepository interface {
 	GetByEmail(ctx context.Context, email string) (*User, error)
 	CreateUser(ctx context.Context, user *User) error
+	GetByID(ctx context.Context, id int64) (*User, error)
 }

@@ -37,3 +37,16 @@ ALTER TABLE product_comments  DROP COLUMN title;
 
 
 CREATE TABLE IF NOT EXISTS banners(id SERIAL PRIMARY KEY, name VARCHAR(255),image VARCHAR(255) NOT NULL,lang VARCHAR(2) NOT NULL);
+
+
+CREATE TABLE IF NOT EXISTS refresh_tokens(
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id BIGINT NOT NULL REFERENCES users(id) on DELETE CASCADE,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    revoked_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_refresh_tokens_token_hash ON refresh_tokens(token_hash);
+CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);

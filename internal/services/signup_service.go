@@ -3,21 +3,21 @@ package services
 import (
 	"context"
 	"nike_store_api/internal/domain"
-	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type SignupService struct {
-	userRepo  domain.UserRepository
-	jwtSecret string
+	userRepo    domain.UserRepository
+	jwtSecret   string
+	authService *AuthService
 }
 
-func NewSignupService(userRepo domain.UserRepository, jwtSecret string) *SignupService {
+func NewSignupService(userRepo domain.UserRepository, authService *AuthService, jwtSecret string) *SignupService {
 	return &SignupService{
-		userRepo:  userRepo,
-		jwtSecret: jwtSecret,
+		userRepo:    userRepo,
+		jwtSecret:   jwtSecret,
+		authService: authService,
 	}
 }
 
@@ -47,22 +47,19 @@ func (s *SignupService) Signup(ctx context.Context, request domain.SignupRequest
 		return nil, domain.ErrInternalServer // <-- 500
 	}
 
-	claims := jwt.MapClaims{
-		"user_id": newUser.ID,
-		"email":   newUser.Email,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+	accessToken, err := s.authService.GenerateAccessToken(ctx, newUser)
+	if err != nil {
+		return nil, domain.ErrInternalServer
 	}
 
-	// ⚠️ استفاده از HS256 برای Secret متنی
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	tokenString, err := token.SignedString([]byte(s.jwtSecret))
+	refreshToken, err := s.authService.IssueRefreshToken(ctx, int(newUser.ID))
 	if err != nil {
-		return nil, domain.ErrInternalServer // <-- 500
+		return nil, domain.ErrInternalServer
 	}
 
 	return &domain.AuthResponse{
-		Token: tokenString,
-		User:  *newUser,
+		Token:        accessToken,
+		RefreshToken: refreshToken,
+		User:         *newUser,
 	}, nil
 }
